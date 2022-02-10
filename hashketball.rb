@@ -126,83 +126,64 @@ def game_hash
   }
 end
 
-# Write code here
 
-def players_hash
-  game_hash[:home][:players] + game_hash[:away][:players]
-end
-
-def num_points_scored(player)
-  players_hash.find { |person| person[:player_name] == player}[:points]
-end
-
-def shoe_size(player)
-  players_hash.find { |person| person[:player_name] == player}[:shoe]
-end
-
-def team_colors(team)
-  if team == "Brooklyn Nets"
-    colors = game_hash[:home][:colors]
-  end
-  if team == "Charlotte Hornets"
-    colors = game_hash[:away][:colors]
-  end
-  colors
+def players #helper method
+  game_hash.map {|team, team_data| team_data[:players]}.flatten
 end
 
 def team_names
-  [].push(game_hash[:home][:team_name], game_hash[:away][:team_name])
+  game_hash.map {|team, team_data| team_data[:team_name]}
 end
 
-
-def player_numbers(team)
-  if team == "Brooklyn Nets"
-    numbers = game_hash[:home][:players].map do |player| 
-      player[:number]
-    end
-  end
-  if team == "Charlotte Hornets"
-    numbers = game_hash[:away][:players].map do |player| 
-      player[:number]
-    end
-  end
-  numbers
+def player_stats(player_name)
+  players.find {|player| player[:player_name] == player_name}
 end
 
-def player_stats(player)
-  players_hash.find { |person| person[:player_name] == player}
+def num_points_scored(player_name)
+  player_stats(player_name)[:points]
+end
+
+def shoe_size(player_name)
+  player_stats(player_name)[:shoe]
+end
+
+def team_colors(team_name)
+  game_hash.each do |team, team_data|
+    if team_data[:team_name] == team_name
+      return team_data[:colors]
+    end
+  end
+end
+
+def player_numbers(team_name)
+    game_hash.each do |team, team_data|
+      if team_data[:team_name] == team_name
+        return team_data[:players].map {|player| player[:number]}
+      end
+    end
 end
 
 def big_shoe_rebounds
-  biggest_shoe = players_hash.map { |player| player[:shoe]}.max
-  rebounds = players_hash.find { |player| player[:shoe] == biggest_shoe }[:rebounds]
+  players.max_by {|player| player[:shoe]}[:rebounds]
 end
-
 
 def most_points_scored
-  highest_score = players_hash.map { |player| player[:points]}.max
-  name = players_hash.find { |player| player[:points] == highest_score }[:player_name]
+  players.max_by {|player| player[:points]}
 end
 
-
 def winning_team
-    home_total = game_hash[:home][:players].map { |player| player[:points]}.sum
-    away_total = game_hash[:away][:players].map { |player| player[:points]}.sum
-    if home_total > away_total
-      winner = "Brooklyn Nets"
-    else
-      winner = "Charlotte Hornets"
-    end
-    winner
+  scores = game_hash.map do |team, team_data|
+    team_points = []
+    team_data[:players].each {|player| team_points << player[:points]}
+    {team_name: team_data[:team_name], total_points: team_points.sum}
+  end
+  scores.max_by {|team| team[:total_points]}[:team_name]
 end
 
 def player_with_longest_name
-  most_letters = players_hash.map { |player| player[:player_name].size}.max
-  name = players_hash.find { |player| player[:player_name].size == most_letters}[:player_name]
+  players.max_by {|player| player[:player_name].length}
 end
 
-def long_name_steals_a_ton
-  most_steals = players_hash.map { |player| player[:steals]}.max
-  player_with_most_steals = players_hash.find { |player| player[:steals] == most_steals}[:player_name]
-  player_with_longest_name == player_with_most_steals
+def long_name_steals_a_ton?
+  players.max_by {|player| player[:steals]} == player_with_longest_name
 end
